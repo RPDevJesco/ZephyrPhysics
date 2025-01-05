@@ -1,0 +1,11 @@
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\bin\Debug\net9.0\2DPhysicsEngine.deps.json
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\bin\Debug\net9.0\2DPhysicsEngine.dll
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\bin\Debug\net9.0\2DPhysicsEngine.pdb
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\obj\Debug\net9.0\2DPhysicsEngine.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\obj\Debug\net9.0\2DPhysicsEngine.AssemblyInfoInputs.cache
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\obj\Debug\net9.0\2DPhysicsEngine.AssemblyInfo.cs
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\obj\Debug\net9.0\2DPhysicsEngine.csproj.CoreCompileInputs.cache
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\obj\Debug\net9.0\2DPhysicsEngine.dll
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\obj\Debug\net9.0\refint\2DPhysicsEngine.dll
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\obj\Debug\net9.0\2DPhysicsEngine.pdb
+C:\Users\jglov\RiderProjects\2DPhysicsEngine\2DPhysicsEngine\obj\Debug\net9.0\ref\2DPhysicsEngine.dll

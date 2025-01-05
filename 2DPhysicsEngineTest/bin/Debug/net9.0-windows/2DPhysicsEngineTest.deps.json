@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "2DPhysicsEngineTest/1.0.0": {
+        "dependencies": {
+          "2DPhysicsEngine": "1.0.0"
+        },
+        "runtime": {
+          "2DPhysicsEngineTest.dll": {}
+        }
+      },
+      "2DPhysicsEngine/1.0.0": {
+        "runtime": {
+          "2DPhysicsEngine.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "2DPhysicsEngineTest/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "2DPhysicsEngine/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

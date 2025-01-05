@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "2DPhysicsEngine/1.0.0": {
+        "runtime": {
+          "2DPhysicsEngine.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "2DPhysicsEngine/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
