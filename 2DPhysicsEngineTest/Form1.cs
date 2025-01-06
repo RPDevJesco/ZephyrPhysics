@@ -6,154 +6,300 @@ namespace _2DPhysicsEngineTest
 {
     public partial class Form1 : Form
     {
-        private Timer _timer; // For the game loop
-        private Bitmap _bitmap; // Back buffer for rendering
+        private Timer _timer;
+        private Bitmap _bitmap;
         private Sprite _sprite;
         private Sprite _anotherSprite;
-        private Quadtree _quadTree; // Spatial partitioning for objects
-
-        private float _spriteScaleFactor; // Scale factor for the first sprite
-        private float _anotherSpriteScaleFactor; // Scale factor for the second sprite
+        private Quadtree _quadTree;
+        private float _spriteScaleFactor;
+        private float _anotherSpriteScaleFactor;
 
         public Form1()
         {
-            // Set up the form
             this.Text = "2D Physics Engine";
             this.Width = 800;
             this.Height = 600;
-            this.DoubleBuffered = true; // Enable double buffering
+            this.DoubleBuffered = true;
+            
+            var env = new PhysicsEnvironment();
+            env.GlobalGravity = (0, 9.81f);
+            env.WindForce = (2.0f, 0);
 
-            // Create the back buffer
+            // Create zones with different physics properties
+            env.AddGravityZone(new GravityZone {
+                Bounds = new RECT(100, 400, 100, 100),
+                GravityVector = (0, -13.81f),
+                TransitionSmoothing = 0.2f
+            });
+            
             _bitmap = new Bitmap(800, 600);
-
-            // Initialize the quadtree with screen dimensions
             _quadTree = new Quadtree(0, new RECT(0, 0, 800, 600));
 
-            // Load and scale the sprites
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-            // Initialize _sprite
+            // Initialize first sprite with enhanced physics
             string instaFilePath = Path.Combine(desktopPath, "insta.png");
-            if (!File.Exists(instaFilePath))
-            {
-                throw new FileNotFoundException("File not found: " + instaFilePath);
-            }
             _sprite = Sprite.FromImage(instaFilePath);
-            var spritePhysics = new PhysicsObject(100, 100, 1)
+            var spriteConfig = new PhysicsConfig {
+                MaxVelocityX = 15.0f,
+                MaxVelocityY = 20.0f,
+                MaxAccelerationX = 10.0f,
+                MaxAccelerationY = 15.0f,
+                GravityScale = 1.2f,
+                GroundFriction = 0.15f,
+                AirFriction = 0.01f,
+                BounceThreshold = 0.2f,
+                SurfaceAngleLimit = 45.0f
+            };
+            
+            var spritePhysics = new PhysicsObject(100, 100, 1, env)
             {
-                VX = 2, // Horizontal velocity
-                VY = 1  // Vertical velocity
+                Config = spriteConfig,
+                AutoOrient = true,
+                VX = 2,
+                VY = 1
             };
             _sprite.AttachPhysics(spritePhysics);
-            _sprite.AttachCollider(new SquareCollider(spritePhysics, 200, new ValueTuple<float, float>(100,100))); // Attach collider with the existing physics object
+            _sprite.AttachCollider(new SquareCollider(spritePhysics, 200, new ValueTuple<float, float>(100,100)));
 
-            // Initialize _anotherSprite
+            // Initialize second sprite with different physics properties
             string diceFilePath = Path.Combine(desktopPath, "dice.png");
-            if (!File.Exists(diceFilePath))
-            {
-                throw new FileNotFoundException("File not found: " + diceFilePath);
-            }
             _anotherSprite = Sprite.FromImage(diceFilePath);
-            var anotherSpritePhysics = new PhysicsObject(100, 400, 10);
+            var anotherConfig = new PhysicsConfig {
+                MaxVelocityX = 10.0f,
+                MaxVelocityY = 15.0f,
+                MaxAccelerationX = 8.0f,
+                MaxAccelerationY = 12.0f,
+                GravityScale = 1.5f,
+                GroundFriction = 0.2f,
+                AirFriction = 0.02f,
+                BounceThreshold = 0.3f,
+                SurfaceAngleLimit = 30.0f
+            };
+            
+            var anotherSpritePhysics = new PhysicsObject(100, 400, 10, env)
+            {
+                Config = anotherConfig,
+                AutoOrient = true,
+                Layer = new CollisionLayer {
+                    Layer = 2,
+                    Mask = 1,
+                    FrictionMultiplier = 1.2f,
+                    TransferVelocity = true
+                }
+            };
             _anotherSprite.AttachPhysics(anotherSpritePhysics);
-            _anotherSprite.AttachCollider(new SquareCollider(anotherSpritePhysics, 150, new ValueTuple<float, float>(70,50))); // Attach collider with the existing physics object
+            _anotherSprite.AttachCollider(new SquareCollider(anotherSpritePhysics, 150, new ValueTuple<float, float>(70,50)));
 
-            // Insert colliders into the quadtree
             _quadTree.Insert(_sprite.Collider);
             _quadTree.Insert(_anotherSprite.Collider);
 
-            // Calculate scale factors to fit the sprites into the window
-            _spriteScaleFactor = CalculateScaleFactor(_sprite.Width, _sprite.Height, 200, 200); // Target size: 200x200
-            _anotherSpriteScaleFactor = CalculateScaleFactor(_anotherSprite.Width, _anotherSprite.Height, 150, 150); // Target size: 150x150
+            _spriteScaleFactor = CalculateScaleFactor(_sprite.Width, _sprite.Height, 200, 200);
+            _anotherSpriteScaleFactor = CalculateScaleFactor(_anotherSprite.Width, _anotherSprite.Height, 150, 150);
 
-            // Set up the game loop
-            _timer = new Timer();
-            _timer.Interval = 16; // ~60 FPS
+            _timer = new Timer { Interval = 16 };
             _timer.Tick += Update;
             _timer.Start();
+
+            // Add keyboard input handling
+            this.KeyPreview = true;
+            this.KeyDown += HandleKeyDown;
+        }
+
+        private void HandleKeyDown(object sender, KeyEventArgs e)
+        {
+            float moveForce = 50.0f;
+            var obj = _sprite.Collider.ConnectedObject;
+
+            switch (e.KeyCode)
+            {
+                case Keys.Left:
+                    obj.ApplyForce(-moveForce, 0);
+                    break;
+                case Keys.Right:
+                    obj.ApplyForce(moveForce, 0);
+                    break;
+                case Keys.Up:
+                    obj.ApplyForce(0, -moveForce);
+                    break;
+                case Keys.Down:
+                    obj.ApplyForce(0, moveForce);
+                    break;
+                case Keys.Space:
+                    // Apply torque for rotation
+                    obj.ApplyTorque(10.0f);
+                    break;
+            }
+        }
+
+        private void Update(object sender, EventArgs e)
+        {
+            _quadTree.Clear();
+            if (_sprite.Collider != null) _quadTree.Insert(_sprite.Collider);
+            if (_anotherSprite.Collider != null) _quadTree.Insert(_anotherSprite.Collider);
+            
+            // Update physics with surface interactions
+            float deltaTime = 0.016f;
+            UpdateObject(_sprite.Collider.ConnectedObject, deltaTime);
+            UpdateObject(_anotherSprite.Collider.ConnectedObject, deltaTime);
+
+            // Handle collisions
+            HandleCollisions();
+
+            RenderFrame();
+            this.Invalidate();
+        }
+
+        private void UpdateObject(PhysicsObject obj, float deltaTime)
+        {
+            // Perform physics update
+            obj.Update(deltaTime);
+
+            // Handle screen boundaries with surface orientation
+            HandleScreenBoundaries(obj);
+        }
+
+        private void HandleScreenBoundaries(PhysicsObject obj)
+        {
+            bool collision = false;
+            (float X, float Y) normal = (0, 0);
+            (float X, float Y) point = (0, 0);
+
+            // Check each boundary and find collision point and normal
+            if (obj.X < 0)
+            {
+                collision = true;
+                normal = (1, 0);
+                point = (0, obj.Y);
+                obj.X = 0;
+            }
+            else if (obj.X > _bitmap.Width)
+            {
+                collision = true;
+                normal = (-1, 0);
+                point = (_bitmap.Width, obj.Y);
+                obj.X = _bitmap.Width;
+            }
+
+            if (obj.Y < 0)
+            {
+                collision = true;
+                normal = (0, 1);
+                point = (obj.X, 0);
+                obj.Y = 0;
+            }
+            else if (obj.Y > _bitmap.Height)
+            {
+                collision = true;
+                normal = (0, -1);
+                point = (obj.X, _bitmap.Height);
+                obj.Y = _bitmap.Height;
+            }
+
+            if (collision)
+            {
+                // Create a surface point for the boundary
+                var surfacePoint = new SurfacePoint
+                {
+                    Position = point,
+                    Normal = normal,
+                    IsGrounded = normal.Y < -0.1f,
+                    Friction = 0.1f
+                };
+
+                // Update object's surface info
+                obj.UpdateSurfaceInfo(obj.AttachedCollider, point);
+
+                // Reflect velocity with dampening
+                float dampening = 0.8f;
+                obj.VX = normal.X == 0 ? obj.VX : -obj.VX * dampening;
+                obj.VY = normal.Y == 0 ? obj.VY : -obj.VY * dampening;
+            }
+        }
+
+        private void HandleCollisions()
+        {
+            var potentialCollisions = _quadTree.Retrieve(_sprite.Collider);
+            foreach (var collider in potentialCollisions)
+            {
+                if (_sprite.Collider.CheckCollision(collider))
+                {
+                    _sprite.Collider.ResolveCollision(collider);
+                    
+                    // Update surface information for both objects
+                    var contactPoint = (_sprite.Collider.ConnectedObject.X, _sprite.Collider.ConnectedObject.Y);
+                    _sprite.Collider.ConnectedObject.UpdateSurfaceInfo(collider, contactPoint);
+                    collider.ConnectedObject.UpdateSurfaceInfo(_sprite.Collider, contactPoint);
+                }
+            }
+        }
+
+        private void RenderFrame()
+        {
+            if (_bitmap == null) return;
+
+            using (Graphics g = Graphics.FromImage(_bitmap))
+            {
+                g.Clear(Color.Black);
+
+                // Draw debug visualization
+                DrawDebugInfo(g);
+
+                // Draw sprites
+                _sprite?.Draw(g, _spriteScaleFactor);
+                _anotherSprite?.Draw(g, _anotherSpriteScaleFactor);
+            }
+        }
+
+        private void DrawDebugInfo(Graphics g)
+        {
+            // Draw collision shapes
+            _sprite?.DebugRender(g, Pens.Red);
+            _anotherSprite?.DebugRender(g, Pens.Blue);
+
+            // Draw surface normals and contact points
+            if (_sprite?.Collider?.ConnectedObject?.CurrentSurface != null)
+            {
+                var surface = _sprite.Collider.ConnectedObject.CurrentSurface;
+                DrawSurfaceInfo(g, surface, Pens.Yellow);
+            }
+
+            if (_anotherSprite?.Collider?.ConnectedObject?.CurrentSurface != null)
+            {
+                var surface = _anotherSprite.Collider.ConnectedObject.CurrentSurface;
+                DrawSurfaceInfo(g, surface, Pens.Green);
+            }
+        }
+
+        private void DrawSurfaceInfo(Graphics g, SurfacePoint surface, Pen pen)
+        {
+            // Draw normal vector
+            float normalLength = 30f;
+            PointF start = new PointF(surface.Position.X, surface.Position.Y);
+            PointF end = new PointF(
+                surface.Position.X + surface.Normal.X * normalLength,
+                surface.Position.Y + surface.Normal.Y * normalLength
+            );
+            g.DrawLine(pen, start, end);
+
+            // Draw contact point
+            float size = 4f;
+            g.DrawEllipse(pen, 
+                surface.Position.X - size/2, 
+                surface.Position.Y - size/2,
+                size, size);
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.DrawImage(_bitmap, 0, 0);
         }
 
         private float CalculateScaleFactor(int originalWidth, int originalHeight, int targetWidth, int targetHeight)
         {
             float widthScale = (float)targetWidth / originalWidth;
             float heightScale = (float)targetHeight / originalHeight;
-            return Math.Min(widthScale, heightScale); // Keep aspect ratio
-        }
-
-        private void Update(object sender, EventArgs e)
-        {
-            // Clear the quadtree
-            _quadTree.Clear();
-
-            // Insert colliders into the quadtree if they are not null
-            if (_sprite.Collider != null)
-                _quadTree.Insert(_sprite.Collider);
-
-            if (_anotherSprite.Collider != null)
-                _quadTree.Insert(_anotherSprite.Collider);
-            
-            // Apply gravity to the sprite
-            _sprite.Collider.ConnectedObject.ApplyForce(0, 9.8f); // Gravity force
-
-            // Update physics
-            _sprite.Collider.ConnectedObject.Update(0.016f); // 16 ms per frame (0.016 seconds)
-
-            // Check for collision with window boundaries
-            if (_sprite.Collider.ConnectedObject.X < 0 || _sprite.Collider.ConnectedObject.X + _sprite.Width * _spriteScaleFactor > _bitmap.Width)
-                _sprite.Collider.ConnectedObject.VX *= -1;
-            if (_sprite.Collider.ConnectedObject.Y < 0 || _sprite.Collider.ConnectedObject.Y + _sprite.Height * _spriteScaleFactor > _bitmap.Height)
-                _sprite.Collider.ConnectedObject.VY *= -1;
-
-            // Retrieve potential collisions from the quadtree
-            var potentialCollisions = _quadTree.Retrieve(_sprite.Collider);
-
-            foreach (var collider in potentialCollisions)
-            {
-                if (_sprite.Collider.CheckCollision(collider))
-                {
-                    _sprite.Collider.ResolveCollision(collider);
-                }
-            }
-
-            // Render the frame
-            RenderFrame();
-            this.Invalidate(); // Force window repaint
-        }
-        
-        private void RenderFrame()
-        {
-            // Ensure bitmap is initialized
-            if (_bitmap == null)
-            {
-                Console.WriteLine("Bitmap is null in RenderFrame.");
-                return;
-            }
-
-            using (Graphics g = Graphics.FromImage(_bitmap))
-            {
-                // Clear the background
-                g.Clear(Color.Black);
-
-                _sprite.DebugRender(g, Pens.Red);
-                _anotherSprite.DebugRender(g, Pens.Blue);
-                // Draw the first sprite
-                if (_sprite != null)
-                {
-                    _sprite.Draw(g, _spriteScaleFactor);
-                }
-
-                // Draw the second sprite
-                if (_anotherSprite != null)
-                {
-                    _anotherSprite.Draw(g, _anotherSpriteScaleFactor);
-                }
-            }
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            // Draw the back buffer to the screen
-            e.Graphics.DrawImage(_bitmap, 0, 0);
+            return Math.Min(widthScale, heightScale);
         }
     }
 
